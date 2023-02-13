@@ -1,0 +1,6 @@
+-Xms1G
+-Xmx10G
+-Xss6M
+--add-opens=java.base/java.lang=ALL-UNNAMED
+--add-modules=jdk.incubator.concurrent
+--enable-preview
