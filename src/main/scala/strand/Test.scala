@@ -16,7 +16,6 @@ object Test:
 
     val account = new Account(ExternalService(globalExecutor), globalExecutor)
 
-//    this will not deadlock
     println(account.getBalanceWithInterest().block())
 
     val accResult = test(account, globalExecutor) // some Acc updates are lost

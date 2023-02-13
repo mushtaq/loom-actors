@@ -31,18 +31,17 @@ private class ContextImpl[T](actorFactory: Context[T] => Actor[T]) extends Conte
     ExecutionContext.fromExecutorService(strandExecutor)
 
   val self: ActorRef[T] =
-    new ActorRefImpl[T](actorFactory, this)(using executionContext)
+    new ActorRefImpl[T](actorFactory, this)
 
   def shutdown(): Unit =
     strandExecutor.shutdown()
 
-private class ActorRefImpl[T](actorFactory: Context[T] => Actor[T], context: Context[T])(using ExecutionContext)
-    extends ActorRef[T]:
+private class ActorRefImpl[T](actorFactory: Context[T] => Actor[T], context: Context[T]) extends ActorRef[T]:
 
   private val actor = actorFactory(context)
 
   def send(message: T): Unit =
-    Future(actor.receive(message))
+    Future(actor.receive(message))(using context.executionContext)
 
   def ask[R](f: Promise[R] => T): Future[R] =
     val p = Promise[R]()
