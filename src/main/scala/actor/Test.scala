@@ -1,7 +1,9 @@
 package actor
 
 import actor.AccountActor.{Deposit, Get}
-import RichExecutor.async
+import actor.lib.Actor
+import common.RichExecutor.async
+import common.RichFuture.block
 
 import java.io.Closeable
 import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
@@ -16,7 +18,11 @@ object Test:
 
     val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
 
-    def update(): Future[Unit] = globalExecutor.async(accountActor.ask(p => Deposit(1, p)).block()).asScala
+    def update(): Future[Unit] =
+      globalExecutor.async:
+        accountActor
+          .ask(Deposit(1, _))
+          .block()
 
     (1 to 1000)
       .map(* => update())
@@ -26,5 +32,3 @@ object Test:
     println(result)
 
     accountActor.shutdown()
-
-  extension [T](x: Future[T]) private def block() = Await.result(x, 10.seconds)

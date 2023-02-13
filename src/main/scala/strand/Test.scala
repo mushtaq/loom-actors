@@ -1,7 +1,8 @@
 package strand
 
-import actor.ExternalService
-import actor.RichExecutor.async
+import common.ExternalService
+import common.RichExecutor.async
+import common.RichFuture.block
 
 import java.io.Closeable
 import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
@@ -26,7 +27,9 @@ object Test:
 
   private def test(acc: Account with Closeable, globalExecutor: ExecutorService) =
     // Asynchronously increments the balance by 1
-    def update(): Future[Unit] = globalExecutor.async(acc.set(1).block()).asScala
+    def update(): Future[Unit] =
+      globalExecutor.async:
+        acc.set(1).block()
 
     // Large number of concurrent updates
     val updateFutures: Seq[Future[Unit]] = (1 to 1000).map(* => update())
@@ -39,5 +42,3 @@ object Test:
 
     acc.close()
     result
-
-  extension [T](x: Future[T]) private def block() = Await.result(x, 10.seconds)

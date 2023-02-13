@@ -1,8 +1,8 @@
-package strand
+package strand.lib
 
 import java.io.Closeable
 import java.util.concurrent.{CompletableFuture, ExecutorService, Executors, ThreadFactory}
-import async.Async
+import scala.async.Async
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 
 class Strand(globalExecutor: ExecutorService) extends Closeable:

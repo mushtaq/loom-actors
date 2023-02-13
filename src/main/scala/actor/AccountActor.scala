@@ -1,6 +1,7 @@
 package actor
 
 import actor.AccountActor.{Deposit, Get, Msg}
+import actor.lib.{Actor, Context}
 
 import scala.concurrent.{Future, Promise}
 

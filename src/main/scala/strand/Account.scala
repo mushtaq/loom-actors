@@ -1,6 +1,8 @@
 package strand
 
-import actor.ExternalService
+import common.ExternalService
+import strand.lib.Strand
+
 import java.io.Closeable
 import java.util.concurrent.ExecutorService
 import scala.concurrent.Future

@@ -1,7 +1,6 @@
-package actor
+package actor.lib
 
-import strand.Strand
-
+import strand.lib.Strand
 import java.io.Closeable
 import java.util.concurrent.{CompletableFuture, ExecutorService, Executors, ThreadFactory}
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future, Promise}
