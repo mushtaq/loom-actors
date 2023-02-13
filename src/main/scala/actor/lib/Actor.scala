@@ -25,7 +25,7 @@ object Actor:
 
 private class ContextImpl[T](actorFactory: Context[T] => Actor[T]) extends Context[T]:
   private val strandExecutor =
-    Executors.newSingleThreadExecutor(Thread.ofVirtual().factory())
+    Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().factory())
 
   val executionContext: ExecutionContext =
     ExecutionContext.fromExecutorService(strandExecutor)
