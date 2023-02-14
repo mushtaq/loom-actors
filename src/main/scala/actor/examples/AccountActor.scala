@@ -50,4 +50,4 @@ object AccountActor:
     val result = accountActor.ask(p => Get(p)).block()
     println(result)
 
-    accountActor.shutdown()
+    accountActor.stop()
