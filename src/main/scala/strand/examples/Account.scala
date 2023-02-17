@@ -3,7 +3,7 @@ package strand.examples
 import common.ExternalService
 import common.RichExecutor.async
 import common.RichFuture.block
-import strand.lib.Strand
+import strand.lib.{Context, Strand, StrandSystem}
 
 import java.io.Closeable
 import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
@@ -14,7 +14,7 @@ import scala.jdk.FutureConverters.{CompletionStageOps, FutureOps}
 // All methods can be scheduled on a single thread ('the Strand')
 // Direct mutating operation on the shared state is allowed
 // Blocking calls and Future results must be handled via the 'StrandContext'
-class Account(externalService: ExternalService, globalExecutor: ExecutorService) extends Strand(globalExecutor):
+class Account(externalService: ExternalService, context: Context) extends Strand(context):
   private var balance = 0
   private var totalTx = 0
 
@@ -27,9 +27,8 @@ class Account(externalService: ExternalService, globalExecutor: ExecutorService)
   def set(x: Int): Future[Unit] = async:
     // User can freely mutate the shared variables because all ops are scheduled on 'the Strand'
     totalTx += 1
-    balance += x
     externalService.ioCall().await
-    block(Thread.sleep(100))
+    balance += x
 
   def computeInterest(): Future[Double] = async:
     balance * interestRate
@@ -40,22 +39,22 @@ class Account(externalService: ExternalService, globalExecutor: ExecutorService)
 
 object Account:
   @main def accountMain: Unit =
-    val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
 
-    val account = new Account(ExternalService(globalExecutor), globalExecutor)
+    val system  = new StrandSystem
+    val account = system.spawn(ctx => new Account(ExternalService(system.globalExecutor), ctx))
 
     println(account.getBalanceWithInterest().block())
 
-    val accResult = test(account, globalExecutor) // some Acc updates are lost
+    val accResult = test(account, system) // some Acc updates are lost
 
     println(s"accResult = $accResult")
 
-    globalExecutor.shutdown()
+    system.stop()
 
-  private def test(acc: Account with Closeable, globalExecutor: ExecutorService) =
+  private def test(acc: Account, system: StrandSystem) =
     // Asynchronously increments the balance by 1
     def update(): Future[Unit] =
-      globalExecutor.async:
+      system.async:
         acc.set(1).block()
 
     // Large number of concurrent updates
@@ -67,5 +66,4 @@ object Account:
     // Read the current balance
     val result = acc.get().block()
 
-    acc.close()
     result

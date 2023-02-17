@@ -1,5 +1,6 @@
 package actor.lib
 
+import common.Cancellable
 import strand.lib.Strand
 
 import java.io.Closeable
@@ -21,9 +22,6 @@ trait Context[T]:
 abstract class Actor[-T](context: Context[T]):
   given ExecutionContext = context.executionContext
   def receive(message: T): Unit
-
-trait Cancellable:
-  def cancel(): Boolean
 
 object Actor:
   def spawn[T](actorFactory: Context[T] => Actor[T]): ActorRef[T] =

@@ -1,6 +1,7 @@
 package common
 
 import common.RichExecutor.async
+import strand.lib.StrandSystem
 
 import java.util.concurrent.{CompletableFuture, ExecutorService}
 import scala.concurrent.Future
@@ -12,5 +13,4 @@ class ExternalService(globalExecutor: ExecutorService) {
     globalExecutor.async:
       Thread.sleep(10)
       99
-
 }
