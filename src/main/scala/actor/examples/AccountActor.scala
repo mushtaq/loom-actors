@@ -1,7 +1,7 @@
 package actor.examples
 
 import actor.examples.AccountActor.{Deposit, Get, Msg}
-import actor.lib.{Actor, Context}
+import actor.lib.{Actor, ActorSystem, Context}
 import common.RichExecutor.async
 import common.RichFuture.block
 
@@ -32,13 +32,12 @@ object AccountActor:
 
   @main
   def accountActorMain: Unit =
-    val accountActor = Actor.spawn(ctx => new AccountActor(ctx))
+    val system       = ActorSystem()
+    val accountActor = system.spawn(ctx => new AccountActor(ctx))
     println(accountActor.ask(p => Get(p)).block())
 
-    val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
-
     def update(): Future[Unit] =
-      globalExecutor
+      system
         .async:
           accountActor.ask(Deposit(1, _))
         .block()
@@ -50,4 +49,4 @@ object AccountActor:
     val result = accountActor.ask(p => Get(p)).block()
     println(result)
 
-    accountActor.stop()
+    system.stop()
