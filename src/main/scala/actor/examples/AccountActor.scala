@@ -33,7 +33,7 @@ object AccountActor:
   @main
   def accountActorMain: Unit =
     val system       = ActorSystem()
-    val accountActor = system.spawn(ctx => new AccountActor(ctx))
+    val accountActor = system.spawn(ctx => AccountActor(ctx))
     println(accountActor.ask(p => Get(p)).block())
 
     def update(): Future[Unit] =

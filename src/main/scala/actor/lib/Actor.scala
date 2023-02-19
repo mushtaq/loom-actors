@@ -43,8 +43,7 @@ private class ContextImpl[T](actorFactory: Context[T] => Actor[T]) extends Conte
 
   given ExecutionContext = executionContext
 
-  val self: ActorRef[T] =
-    new ActorRefImpl[T](actorFactory, this)
+  val self: ActorRef[T] = ActorRefImpl[T](actorFactory, this)
 
   def spawn[R](actorFactory: Context[R] => Actor[R]): ActorRef[R] =
     val ref = ContextImpl[R](actorFactory).self

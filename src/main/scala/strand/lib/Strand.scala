@@ -13,16 +13,16 @@ import scala.jdk.FutureConverters.CompletionStageOps
 trait Context:
   def executionContext: ExecutionContext
   def schedule(delay: FiniteDuration)(action: => Unit): Cancellable
-  def spawn[T <: Strand](strandFactory: Context => T): T
+  def spawn[T <: Strand](strandFactory: Context ?=> T): T
   def stop(): Unit
 
-class Strand(protected val context: Context):
+class Strand(using protected val context: Context):
   given ExecutionContext = context.executionContext
 
   inline def async[T](inline x: T): Future[T]               = Async.async(x)
   extension [T](x: Future[T]) protected inline def await: T = Async.await(x)
 
-private class ContextImpl[T](strandFactory: Context => T) extends Context:
+private class ContextImpl[T](strandFactory: Context ?=> T) extends Context:
   private var children: List[Context] = Nil
 
   private val strandExecutor =
@@ -33,9 +33,9 @@ private class ContextImpl[T](strandFactory: Context => T) extends Context:
 
   given ExecutionContext = executionContext
 
-  val self: T = strandFactory(this)
+  val self: T = strandFactory(using this)
 
-  def spawn[T <: Strand](strandFactory: Context => T): T =
+  def spawn[R <: Strand](strandFactory: Context ?=> R): R =
     val ctx = ContextImpl(strandFactory)
     Future:
       children ::= ctx
@@ -43,13 +43,13 @@ private class ContextImpl[T](strandFactory: Context => T) extends Context:
 
   def schedule(delay: FiniteDuration)(action: => Unit): Cancellable =
     val future = strandExecutor.schedule[Unit](() => action, delay.length, delay.unit)
-    () => future.cancel(true)
+    () => future.cancel(false)
 
   def stop(): Unit =
     children.foreach(_.stop())
     strandExecutor.shutdown()
 
-class StrandSystem extends ContextImpl(_ => ()):
+class StrandSystem extends ContextImpl(_ ?=> ()):
   val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
 
   def async[T](op: => T): Future[T] = globalExecutor.async(op)

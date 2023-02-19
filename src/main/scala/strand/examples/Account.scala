@@ -14,7 +14,7 @@ import scala.jdk.FutureConverters.{CompletionStageOps, FutureOps}
 // All methods can be scheduled on a single thread ('the Strand')
 // Direct mutating operation on the shared state is allowed
 // Blocking calls and Future results must be handled via the 'StrandContext'
-class Account(externalService: ExternalService, context: Context) extends Strand(context):
+class Account(externalService: ExternalService)(using Context) extends Strand:
   private var balance = 0
   private var totalTx = 0
 
@@ -40,8 +40,8 @@ class Account(externalService: ExternalService, context: Context) extends Strand
 object Account:
   @main def accountMain: Unit =
 
-    val system  = new StrandSystem
-    val account = system.spawn(ctx => new Account(ExternalService(system.globalExecutor), ctx))
+    val system  = StrandSystem()
+    val account = system.spawn(Account(ExternalService(system.globalExecutor)))
 
     println(account.getBalanceWithInterest().block())
 
