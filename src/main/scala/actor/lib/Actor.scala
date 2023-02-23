@@ -14,25 +14,22 @@ trait ActorRef[-T]:
   def ask[R](f: Promise[R] => T): Future[R]
   def stop(): Unit
 
-trait Context[T]:
+trait Context[-T]:
   def executionContext: ExecutionContext
   def self: ActorRef[T]
-  def spawn[T](actorFactory: Context[T] => Actor[T]): ActorRef[T]
+  def spawn[R](actorFactory: Context[R] ?=> Actor[R]): ActorRef[R]
   def schedule(delay: FiniteDuration)(action: => Unit): Cancellable
   def stop(): Unit
 
-abstract class Actor[-T](context: Context[T]):
+abstract class Actor[-T](using protected val context: Context[T]):
   given ExecutionContext = context.executionContext
   def receive(message: T): Unit
 
 object Actor:
-  def Empty: Actor[Unit] = new Actor[Unit](null):
+  def Empty: Actor[Unit] = new Actor[Unit](using null):
     override def receive(message: Unit): Unit = ()
 
-  def spawn[T](actorFactory: Context[T] => Actor[T]): ActorRef[T] =
-    ContextImpl[T](actorFactory).self
-
-private class ContextImpl[T](actorFactory: Context[T] => Actor[T]) extends Context[T]:
+private class ContextImpl[T](actorFactory: Context[T] ?=> Actor[T]) extends Context[T]:
   private var children: List[ActorRef[_]] = Nil
 
   private val strandExecutor =
@@ -43,9 +40,9 @@ private class ContextImpl[T](actorFactory: Context[T] => Actor[T]) extends Conte
 
   given ExecutionContext = executionContext
 
-  val self: ActorRef[T] = ActorRefImpl[T](actorFactory, this)
+  val self: ActorRef[T] = ActorRefImpl[T](actorFactory)(using this)
 
-  def spawn[R](actorFactory: Context[R] => Actor[R]): ActorRef[R] =
+  def spawn[R](actorFactory: Context[R] ?=> Actor[R]): ActorRef[R] =
     val ref = ContextImpl[R](actorFactory).self
     Future:
       children ::= ref
@@ -59,9 +56,9 @@ private class ContextImpl[T](actorFactory: Context[T] => Actor[T]) extends Conte
     children.foreach(_.stop())
     strandExecutor.shutdown()
 
-private class ActorRefImpl[T](actorFactory: Context[T] => Actor[T], context: Context[T]) extends ActorRef[T]:
+private class ActorRefImpl[T](actorFactory: Context[T] ?=> Actor[T])(using context: Context[T]) extends ActorRef[T]:
 
-  private val actor = actorFactory(context)
+  private val actor = actorFactory
 
   def send(message: T): Unit =
     Future(actor.receive(message))(using context.executionContext)
@@ -73,7 +70,7 @@ private class ActorRefImpl[T](actorFactory: Context[T] => Actor[T], context: Con
 
   def stop(): Unit = context.stop()
 
-class ActorSystem extends ContextImpl[Unit](x => Actor.Empty):
+class ActorSystem extends ContextImpl[Unit](x ?=> Actor.Empty):
   val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
 
   def async[T](op: => T): Future[T] = globalExecutor.async(op)

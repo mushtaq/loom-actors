@@ -11,7 +11,7 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future, Promise}
 import scala.jdk.FutureConverters.{CompletionStageOps, FutureOps}
 
-class AccountActor(context: Context[Msg]) extends Actor[Msg](context):
+class AccountActor(using Context[Msg]) extends Actor[Msg]:
   private var balance = 0
   override def receive(message: Msg): Unit = message match
     case Get(response) =>
@@ -33,7 +33,7 @@ object AccountActor:
   @main
   def accountActorMain: Unit =
     val system       = ActorSystem()
-    val accountActor = system.spawn(ctx => AccountActor(ctx))
+    val accountActor = system.spawn(AccountActor())
     println(accountActor.ask(p => Get(p)).block())
 
     def update(): Future[Unit] =
