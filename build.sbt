@@ -11,5 +11,7 @@ lazy val root = project
     libraryDependencies += "org.scalameta"   %% "munit"                            % "0.7.29" % Test,
     javacOptions ++= Seq("-source", "19", "-target", "19"),
     watchTriggeredMessage := Watch.clearScreenOnTrigger,
-    watchBeforeCommand    := Watch.clearScreen
+    watchBeforeCommand    := Watch.clearScreen,
+//    resolvers += "jitpack" at "https://jitpack.io",
+    libraryDependencies += "tw" %% "async" % "0.1.0-SNAPSHOT"
   )

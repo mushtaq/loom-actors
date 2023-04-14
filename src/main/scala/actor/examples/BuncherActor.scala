@@ -68,6 +68,7 @@ class BuncherTestActor(using Context[Unit]) extends Actor[Unit]:
 object BuncherTestActor:
   @main
   def buncherApp: Unit =
+    println("*******************")
     val system = ActorSystem()
     system.spawn(BuncherTestActor())
   //    StdIn.readLine()

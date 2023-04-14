@@ -31,7 +31,7 @@ object AccountActor:
   /////////////////////////
 
   @main
-  def accountActorMain: Unit =
+  def accountActorMain(): Unit =
     val system       = ActorSystem()
     val accountActor = system.spawn(AccountActor())
     println(accountActor.ask(p => Get(p)).block())

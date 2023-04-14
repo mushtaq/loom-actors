@@ -70,11 +70,12 @@ private class ActorRefImpl[T](actorFactory: Context[T] ?=> Actor[T])(using conte
 
   def stop(): Unit = context.stop()
 
+
 class ActorSystem extends ContextImpl[Unit](x ?=> Actor.Empty):
-  val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
+  private val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
 
   def async[T](op: => T): Future[T] = globalExecutor.async(op)
 
   override def stop(): Unit = Future:
-    globalExecutor.shutdown
+    globalExecutor.shutdown()
     super.stop()
