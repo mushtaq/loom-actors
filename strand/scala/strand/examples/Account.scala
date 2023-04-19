@@ -1,15 +1,10 @@
 package strand.examples
 
 import common.ExternalService
-import common.RichExecutor.async
 import common.RichFuture.block
 import strand.lib.{Context, Strand, StrandSystem}
 
-import java.io.Closeable
-import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
-import scala.jdk.FutureConverters.{CompletionStageOps, FutureOps}
+import scala.concurrent.Future
 
 // All methods can be scheduled on a single thread ('the Strand')
 // Direct mutating operation on the shared state is allowed

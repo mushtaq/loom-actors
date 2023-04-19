@@ -1,7 +1,6 @@
 package common
 
-import java.io.Closeable
-import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
+import java.util.concurrent.{CompletableFuture, ExecutorService}
 import scala.concurrent.Future
 import scala.jdk.FutureConverters.CompletionStageOps
 

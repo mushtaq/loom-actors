@@ -3,10 +3,8 @@ package strand.examples
 import common.Cancellable
 import strand.lib.{Context, Strand, StrandSystem}
 
-import java.util.concurrent.{Executors, TimeUnit}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
-import scala.io.StdIn
 
 class BuncherDestination(using Context) extends Strand:
   def batch(messages: Vector[String]): Future[Unit] = async:

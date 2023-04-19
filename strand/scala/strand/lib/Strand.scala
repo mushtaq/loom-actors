@@ -3,12 +3,10 @@ package strand.lib
 import common.Cancellable
 import common.RichExecutor.async
 
-import java.io.Closeable
-import java.util.concurrent.{CompletableFuture, ExecutorService, Executors, ThreadFactory}
+import java.util.concurrent.Executors
 import scala.async.Async
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
-import scala.jdk.FutureConverters.CompletionStageOps
+import scala.concurrent.{ExecutionContext, Future}
 
 trait Context:
   def executionContext: ExecutionContext

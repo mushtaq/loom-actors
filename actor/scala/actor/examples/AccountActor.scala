@@ -2,22 +2,21 @@ package actor.examples
 
 import actor.examples.AccountActor.{Deposit, Get, Msg}
 import actor.lib.{Actor, ActorSystem, Context}
-import common.RichExecutor.async
 import common.RichFuture.block
 
-import java.io.Closeable
-import java.util.concurrent.{CompletableFuture, ExecutorService, Executors}
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future, Promise}
-import scala.jdk.FutureConverters.{CompletionStageOps, FutureOps}
+import scala.async.Async.*
+import scala.concurrent.{Future, Promise}
 
 class AccountActor(using Context[Msg]) extends Actor[Msg]:
   private var balance = 0
   override def receive(message: Msg): Unit = message match
     case Get(response) =>
-      Future
-        .successful(10)
-        .onComplete(_ => context.self.send(Deposit(0, Promise())))
+//      async:
+//        await(Future.successful(10))
+//        context.self.send(Deposit(0, Promise()))
+//      Future
+//        .successful(10)
+//        .onComplete(_ => context.self.send(Deposit(0, Promise())))
       response.trySuccess(balance)
     case Deposit(value, response) =>
       balance += value

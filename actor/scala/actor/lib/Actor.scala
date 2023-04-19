@@ -2,12 +2,10 @@ package actor.lib
 
 import common.Cancellable
 import common.RichExecutor.async
-import strand.lib.Strand
 
-import java.io.Closeable
-import java.util.concurrent.{CompletableFuture, ExecutorService, Executors, ThreadFactory}
+import java.util.concurrent.Executors
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 trait ActorRef[-T]:
   def send(message: T): Unit
@@ -70,8 +68,7 @@ private class ActorRefImpl[T](actorFactory: Context[T] ?=> Actor[T])(using conte
 
   def stop(): Unit = context.stop()
 
-
-class ActorSystem extends ContextImpl[Unit](x ?=> Actor.Empty):
+class ActorSystem extends ContextImpl[Unit](_ ?=> Actor.Empty):
   private val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
 
   def async[T](op: => T): Future[T] = globalExecutor.async(op)

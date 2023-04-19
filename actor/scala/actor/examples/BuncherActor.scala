@@ -1,11 +1,11 @@
 package actor.examples
 
+import common.Cancellable
 import actor.examples.BuncherActor.{Info, Msg, Timeout}
 import actor.examples.BuncherDestinationActor.Batch
 import actor.lib.{Actor, ActorRef, ActorSystem, Context}
-import common.Cancellable
-
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
+import actor.lib.*
 
 class BuncherDestinationActor(using Context[Batch]) extends Actor[Batch]:
   override def receive(message: Batch): Unit =
