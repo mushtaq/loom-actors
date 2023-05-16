@@ -6,10 +6,12 @@ import strand.lib.{Context, Strand, StrandSystem}
 import scala.concurrent.Future
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
+//===========================================================================================
 class BuncherDestination(using Context) extends Strand:
   def batch(messages: Vector[String]): Future[Unit] = async:
     println(s"Got batch of ${messages.size} messages: ${messages.mkString(", ")} ")
 
+//===========================================================================================
 class Buncher(target: BuncherDestination, after: FiniteDuration, maxSize: Int)(using Context) extends Strand:
   private var isIdle: Boolean        = true
   private var buffer: Vector[String] = Vector.empty
@@ -34,6 +36,7 @@ class Buncher(target: BuncherDestination, after: FiniteDuration, maxSize: Int)(u
     buffer = Vector.empty
     isIdle = true
 
+//===========================================================================================
 class BuncherTest(using Context) extends Strand:
   private val target: BuncherDestination = context.spawn(BuncherDestination())
   private val buncher: Buncher           = context.spawn(Buncher(target, 3.seconds, 10))
@@ -50,10 +53,10 @@ class BuncherTest(using Context) extends Strand:
   context.schedule(4.seconds):
     buncher.info("18")
 
-object Buncher:
-  @main
-  def buncherApp: Unit =
-    val system = StrandSystem()
-    system.spawn(BuncherTest())
+//===========================================================================================
+@main
+def buncherApp: Unit =
+  val system = StrandSystem()
+  system.spawn(BuncherTest())
 //    StdIn.readLine()
 //    system.stop()

@@ -8,18 +8,21 @@ import scala.async.Async
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
-trait Context:
-  def executionContext: ExecutionContext
-  def schedule(delay: FiniteDuration)(action: => Unit): Cancellable
-  def spawn[T <: Strand](strandFactory: Context ?=> T): T
-  def stop(): Unit
-
+//-----------------------------------------------------------------------------------------
 class Strand(using protected val context: Context):
   given ExecutionContext = context.executionContext
 
   inline def async[T](inline x: T): Future[T]               = Async.async(x)
   extension [T](x: Future[T]) protected inline def await: T = Async.await(x)
 
+//===========================================================================================
+trait Context:
+  def executionContext: ExecutionContext
+  def schedule(delay: FiniteDuration)(action: => Unit): Cancellable
+  def spawn[T <: Strand](strandFactory: Context ?=> T): T
+  def stop(): Unit
+
+//-----------------------------------------------------------------------------------------
 private class ContextImpl[T](strandFactory: Context ?=> T) extends Context:
   private var children: List[Context] = Nil
 
@@ -47,6 +50,7 @@ private class ContextImpl[T](strandFactory: Context ?=> T) extends Context:
     children.foreach(_.stop())
     strandExecutor.shutdown()
 
+//===========================================================================================
 class StrandSystem extends ContextImpl(_ ?=> ()):
   val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
 

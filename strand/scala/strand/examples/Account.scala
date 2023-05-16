@@ -32,33 +32,33 @@ class Account(externalService: ExternalService)(using Context) extends Strand:
     totalTx += 1
     balance + computeInterest().await
 
-object Account:
-  @main def accountMain: Unit =
+//===========================================================================================
+@main def accountMain: Unit =
+  val system  = StrandSystem()
+  val account = system.spawn(Account(ExternalService(system.globalExecutor)))
 
-    val system  = StrandSystem()
-    val account = system.spawn(Account(ExternalService(system.globalExecutor)))
+  println(account.getBalanceWithInterest().block())
 
-    println(account.getBalanceWithInterest().block())
+  val accResult = test(account, system) // some Acc updates are lost
 
-    val accResult = test(account, system) // some Acc updates are lost
+  println(s"accResult = $accResult")
 
-    println(s"accResult = $accResult")
+  system.stop()
 
-    system.stop()
+//-----------------------------------------------------------------------------------------
+private def test(acc: Account, system: StrandSystem) =
+  // Asynchronously increments the balance by 1
+  def update(): Future[Unit] =
+    system.async:
+      acc.set(1).block()
 
-  private def test(acc: Account, system: StrandSystem) =
-    // Asynchronously increments the balance by 1
-    def update(): Future[Unit] =
-      system.async:
-        acc.set(1).block()
+  // Large number of concurrent updates
+  val updateFutures: Seq[Future[Unit]] = (1 to 1000).map(* => update())
 
-    // Large number of concurrent updates
-    val updateFutures: Seq[Future[Unit]] = (1 to 1000).map(* => update())
+  // Wait for all updates to finish
+  updateFutures.foreach(_.block())
 
-    // Wait for all updates to finish
-    updateFutures.foreach(_.block())
+  // Read the current balance
+  val result = acc.get().block()
 
-    // Read the current balance
-    val result = acc.get().block()
-
-    result
+  result
