@@ -12,9 +12,7 @@ trait ActorRef[-T]:
   def stop(): Future[Unit]
 
 //-----------------------------------------------------------------------------------------
-private class ActorRefImpl[T](actorFactory: Context[T] ?=> Actor[T])(using context: Context[T]) extends ActorRef[T]:
-  private val actor = actorFactory
-
+private class ActorRefImpl[T](actor: Actor[T])(using context: Context[T]) extends ActorRef[T]:
   def send(message: T): Unit =
     Future(actor.receive(message))(using context.executionContext)
 
@@ -29,11 +27,6 @@ private class ActorRefImpl[T](actorFactory: Context[T] ?=> Actor[T])(using conte
 abstract class Actor[-T](using protected val context: Context[T]):
   given ExecutionContext = context.executionContext
   def receive(message: T): Unit
-
-//-----------------------------------------------------------------------------------------
-object Actor:
-  def Empty: Actor[Unit] = new Actor[Unit](using null):
-    override def receive(message: Unit): Unit = ()
 
 //===========================================================================================
 trait Context[-T]:
@@ -52,7 +45,7 @@ private class ContextImpl[T](actorFactory: Context[T] ?=> Actor[T]) extends Cont
 
   given ExecutionContext = executionContext
 
-  val self: ActorRef[T] = ActorRefImpl[T](actorFactory)(using this)
+  val self: ActorRef[T] = ActorRefImpl[T](actorFactory(using this))(using this)
 
   def spawn[R](actorFactory: Context[R] ?=> Actor[R]): ActorRef[R] =
     val ref = ContextImpl[R](actorFactory).self
@@ -70,12 +63,12 @@ private class ContextImpl[T](actorFactory: Context[T] ?=> Actor[T]) extends Cont
       .map(_ => strandExecutor.shutdown())
 
 //===========================================================================================
-class ActorSystem extends Context[Unit]:
-  private val context: ContextImpl[Unit] = ContextImpl[Unit](_ ?=> Actor.Empty)
-  export context.{stop as _, *}
-
+class ActorSystem:
   private val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
   given ExecutionContext     = ExecutionContext.fromExecutorService(globalExecutor)
 
-  def stop(): Future[Unit]          = context.stop().map(_ => globalExecutor.shutdown())
-  def async[T](op: => T): Future[T] = Future(op)
+  private val context: ContextImpl[Unit] = ContextImpl[Unit](_ ?=> null)
+  export context.{spawn, schedule}
+
+  def stop(): Future[Unit]           = context.stop().map(_ => globalExecutor.shutdown())
+  def future[T](op: => T): Future[T] = Future(op)

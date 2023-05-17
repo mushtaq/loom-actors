@@ -32,7 +32,7 @@ def accountMain(): Unit =
 
   def update(): Future[Unit] =
     system
-      .async:
+      .future:
         accountActor.ask(Deposit(1, _))
       .block()
 
@@ -43,4 +43,4 @@ def accountMain(): Unit =
   val result = accountActor.ask(p => Get(p)).block()
   println(result)
 
-  system.stop()
+  system.stop().block()

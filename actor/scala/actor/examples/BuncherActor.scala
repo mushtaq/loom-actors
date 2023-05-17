@@ -5,7 +5,6 @@ import actor.examples.BuncherActor.{Info, Msg, Timeout}
 import actor.examples.BuncherDestinationActor.Batch
 import actor.lib.{Actor, ActorRef, ActorSystem, Context}
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
-import actor.lib.*
 
 //-----------------------------------------------------------------------------------------
 object BuncherDestinationActor:

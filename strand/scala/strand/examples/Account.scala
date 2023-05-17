@@ -33,9 +33,10 @@ class Account(externalService: ExternalService)(using Context) extends Strand:
     balance + computeInterest().await
 
 //===========================================================================================
-@main def accountMain: Unit =
-  val system  = StrandSystem()
-  val account = system.spawn(Account(ExternalService(system.globalExecutor)))
+@main def accountMain(): Unit =
+  val system = StrandSystem()
+  import system.given
+  val account = system.spawn(Account(ExternalService()))
 
   println(account.getBalanceWithInterest().block())
 
@@ -49,7 +50,7 @@ class Account(externalService: ExternalService)(using Context) extends Strand:
 private def test(acc: Account, system: StrandSystem) =
   // Asynchronously increments the balance by 1
   def update(): Future[Unit] =
-    system.async:
+    system.future:
       acc.set(1).block()
 
   // Large number of concurrent updates

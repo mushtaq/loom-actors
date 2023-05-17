@@ -1,14 +1,10 @@
 package common
 
-import common.RichExecutor.async
+import scala.concurrent.{ExecutionContext, Future}
 
-import java.util.concurrent.ExecutorService
-import scala.concurrent.Future
-
-class ExternalService(globalExecutor: ExecutorService) {
+class ExternalService(using ExecutionContext) {
   // Demo IO call to an external service that takes a few millis to complete
-  def ioCall(): Future[Int] =
-    globalExecutor.async:
-      Thread.sleep(10)
-      99
+  def ioCall(): Future[Int] = Future:
+    Thread.sleep(10)
+    99
 }

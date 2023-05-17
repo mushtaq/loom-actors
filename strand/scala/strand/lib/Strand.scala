@@ -1,7 +1,6 @@
 package strand.lib
 
 import common.Cancellable
-import common.RichExecutor.async
 
 import java.util.concurrent.Executors
 import scala.async.Async
@@ -17,13 +16,13 @@ class Strand(using protected val context: Context):
 
 //===========================================================================================
 trait Context:
-  def executionContext: ExecutionContext
+  given executionContext: ExecutionContext
   def schedule(delay: FiniteDuration)(action: => Unit): Cancellable
   def spawn[T <: Strand](strandFactory: Context ?=> T): T
-  def stop(): Unit
+  def stop(): Future[Unit]
 
 //-----------------------------------------------------------------------------------------
-private class ContextImpl[T](strandFactory: Context ?=> T) extends Context:
+private class ContextImpl extends Context:
   private var children: List[Context] = Nil
 
   private val strandExecutor =
@@ -34,28 +33,28 @@ private class ContextImpl[T](strandFactory: Context ?=> T) extends Context:
 
   given ExecutionContext = executionContext
 
-  val self: T = strandFactory(using this)
-
   def spawn[R <: Strand](strandFactory: Context ?=> R): R =
-    val ctx = ContextImpl(strandFactory)
+    val ctx = ContextImpl()
     Future:
       children ::= ctx
-    ctx.self
+    strandFactory(using ctx)
 
   def schedule(delay: FiniteDuration)(action: => Unit): Cancellable =
     val future = strandExecutor.schedule[Unit](() => action, delay.length, delay.unit)
     () => future.cancel(false)
 
-  def stop(): Unit =
-    children.foreach(_.stop())
-    strandExecutor.shutdown()
+  def stop(): Future[Unit] =
+    Future
+      .traverse(children)(_.stop())
+      .map(_ => strandExecutor.shutdown())
 
 //===========================================================================================
-class StrandSystem extends ContextImpl(_ ?=> ()):
-  val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
+class StrandSystem:
+  private val globalExecutor = Executors.newVirtualThreadPerTaskExecutor()
+  given ExecutionContext     = ExecutionContext.fromExecutorService(globalExecutor)
 
-  def async[T](op: => T): Future[T] = globalExecutor.async(op)
+  private val context: Context = ContextImpl()
+  export context.{spawn, schedule}
 
-  override def stop(): Unit = Future:
-    globalExecutor.shutdown()
-    super.stop()
+  def stop(): Future[Unit]           = context.stop().map(_ => globalExecutor.shutdown())
+  def future[T](op: => T): Future[T] = Future(op)
