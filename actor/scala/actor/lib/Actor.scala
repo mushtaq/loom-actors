@@ -40,6 +40,7 @@ trait Context[-T]:
 private class ContextImpl[T](actorFactory: Context[T] ?=> Actor[T]) extends Context[T]:
   private var children: List[ActorRef[_]] = Nil
 
+//  private val strandExecutor = Executors.newScheduledThreadPool(1000, Thread.ofVirtual().factory())
   private val strandExecutor             = Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().factory())
   val executionContext: ExecutionContext = ExecutionContext.fromExecutorService(strandExecutor)
 
@@ -54,8 +55,8 @@ private class ContextImpl[T](actorFactory: Context[T] ?=> Actor[T]) extends Cont
     ref
 
   def schedule(delay: FiniteDuration)(action: => Unit): Cancellable =
-    val value = strandExecutor.schedule[Unit](() => action, delay.length, delay.unit)
-    () => value.cancel(true)
+    val future = strandExecutor.schedule[Unit](() => action, delay.length, delay.unit)
+    () => future.cancel(true)
 
   def stop(): Future[Unit] =
     Future

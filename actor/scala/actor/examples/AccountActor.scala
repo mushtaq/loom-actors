@@ -5,7 +5,7 @@ import actor.lib.{Actor, ActorSystem, Context}
 import common.RichFuture.block
 
 import scala.async.Async.*
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.Promise
 
 //-----------------------------------------------------------------------------------------
 object AccountActor:
@@ -30,14 +30,8 @@ def accountMain(): Unit =
   val accountActor = system.spawn(AccountActor())
   println(accountActor.ask(p => Get(p)).block())
 
-  def update(): Future[Unit] =
-    system
-      .future:
-        accountActor.ask(Deposit(1, _))
-      .block()
-
-  (1 to 1000)
-    .map(* => update())
+  (1 to 10000)
+    .map(* => accountActor.ask(Deposit(1, _)))
     .foreach(_.block())
 
   val result = accountActor.ask(p => Get(p)).block()
