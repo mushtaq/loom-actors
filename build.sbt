@@ -2,7 +2,7 @@ inThisBuild(
   Seq(
     organization          := "com.example",
     version               := "0.1.0-SNAPSHOT",
-    scalaVersion          := "3.3.0-RC4",
+    scalaVersion          := "3.3.0-RC6",
     watchTriggeredMessage := Watch.clearScreenOnTrigger,
     watchBeforeCommand    := Watch.clearScreen,
     //    resolvers += "jitpack" at "https://jitpack.io",
@@ -24,7 +24,7 @@ lazy val extraSourceDir = Compile / unmanagedSourceDirectories += (Compile / bas
 
 lazy val root = project
   .in(file("."))
-  .aggregate(common, actor, strand, callback)
+  .aggregate(common, actor, strand, xstrand)
 
 lazy val common = project
   .settings(extraSourceDir)
@@ -37,6 +37,6 @@ lazy val strand = project
   .dependsOn(common)
   .settings(extraSourceDir)
 
-lazy val callback = project
+lazy val xstrand = project
   .dependsOn(common)
   .settings(extraSourceDir)
